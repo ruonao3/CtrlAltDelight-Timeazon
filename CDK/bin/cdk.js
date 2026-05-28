@@ -2,9 +2,9 @@
 import * as cdk from 'aws-cdk-lib';
 import { CdkStack } from '../lib/cdk-stack.js';
 
-const stackName = 'CtrlAltDelight'
+//const stackName = 'CtrlAltDelight'
 
-//const stackName = process.env.GROUP_PROJECT_STACK_NAME
+const stackName = process.env.GROUP_PROJECT_STACK_NAME
 
 if (!stackName || !stackName.trim()) {
   console.error('Environment variable GROUP_PROJECT_STACK_NAME is not set')
