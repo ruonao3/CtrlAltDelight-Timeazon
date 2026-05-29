@@ -5,6 +5,7 @@ import { CdkStack } from '../lib/cdk-stack.js';
 //const stackName = 'CtrlAltDelight'
 
 const stackName = process.env.GROUP_PROJECT_STACK_NAME
+const environmentName=process.env.APP_ENV || 'dev'
 
 if (!stackName || !stackName.trim()) {
   console.error('Environment variable GROUP_PROJECT_STACK_NAME is not set')
@@ -34,6 +35,7 @@ new CdkStack(app, 'CdkStack', {
   certArn: settings.certArn,
   domainName: settings.domainName,
   dbName: settings.dbName,
-  vpcName: settings.vpcName  
+  vpcName: settings.vpcName,
+  environmentName: environmentName
 });
 
