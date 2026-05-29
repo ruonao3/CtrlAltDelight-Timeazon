@@ -27,15 +27,44 @@ const settings = {
 }
 
 const app = new cdk.App();
-new CdkStack(app, 'CdkStack', {
-  env: settings.env,
-  permissionsBoundaryPolicyName: settings.permissionsBoundaryPolicyName,
-  subDomain: settings.subDomain,
-  stackName: settings.stackName,
-  certArn: settings.certArn,
-  domainName: settings.domainName,
-  dbName: settings.dbName,
-  vpcName: settings.vpcName,
-  environmentName: environmentName
-});
+if(environmentName==='dev'){
+  new CdkStack(app, 'CdkStackDev', {
+    env: settings.env,
+    permissionsBoundaryPolicyName: settings.permissionsBoundaryPolicyName,
+    subDomain: settings.subDomain,
+    stackName: `${stackName}-dev`,
+    certArn: settings.certArn,
+    domainName: settings.domainName,
+    dbName: settings.dbName,
+    vpcName: settings.vpcName,
+    environmentName: 'dev',
+    devWebAclArn: settings.devWebAclArn
+  });
+}
+
+if(environmentName==='prod'){
+  new CdkStack(app, 'CdkStackProd', {
+    env: settings.env,
+    permissionsBoundaryPolicyName: settings.permissionsBoundaryPolicyName,
+    subDomain: settings.subDomain,
+    stackName: `${stackName}-prod`,
+    certArn: settings.certArn,
+    domainName: settings.domainName,
+    dbName: settings.dbName,
+    vpcName: settings.vpcName,
+    environmentName: 'prod',
+    devWebAclArn: undefined
+  });
+}
+// new CdkStack(app, 'CdkStack', {
+//   env: settings.env,
+//   permissionsBoundaryPolicyName: settings.permissionsBoundaryPolicyName,
+//   subDomain: settings.subDomain,
+//   stackName: settings.stackName,
+//   certArn: settings.certArn,
+//   domainName: settings.domainName,
+//   dbName: settings.dbName,
+//   vpcName: settings.vpcName,
+//   environmentName: environmentName
+// });
 
