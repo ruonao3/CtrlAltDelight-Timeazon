@@ -19,6 +19,13 @@ import * as nodejs from 'aws-cdk-lib/aws-lambda-nodejs'
 import * as apigw from 'aws-cdk-lib/aws-apigateway'
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb'
 
+/**
+ * @typedef {import('aws-cdk-lib').StackProps & {
+ * stackName:string,
+ * subDomain
+ * }}
+ */
+
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
