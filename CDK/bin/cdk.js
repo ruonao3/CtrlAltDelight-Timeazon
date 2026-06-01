@@ -28,10 +28,10 @@ const settings = {
 
 const app = new cdk.App();
 if(environmentName==='dev'){
-  new CdkStack(app, 'CdkStackDev', {
+  const DevStack= new CdkStack(app, 'CdkStackDev', {
     env: settings.env,
     permissionsBoundaryPolicyName: settings.permissionsBoundaryPolicyName,
-    subDomain: settings.subDomain,
+    subDomain: `${settings.subDomain}-dev`,
     stackName: `${stackName}-dev`,
     certArn: settings.certArn,
     domainName: settings.domainName,
@@ -43,10 +43,10 @@ if(environmentName==='dev'){
 }
 
 if(environmentName==='prod'){
-  new CdkStack(app, 'CdkStackProd', {
+  const ProdStack= new CdkStack(app, 'CdkStackProd', {
     env: settings.env,
     permissionsBoundaryPolicyName: settings.permissionsBoundaryPolicyName,
-    subDomain: settings.subDomain,
+    subDomain: `${settings.subDomain}-prod`,
     stackName: `${stackName}-prod`,
     certArn: settings.certArn,
     domainName: settings.domainName,
