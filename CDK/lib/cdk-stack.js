@@ -421,8 +421,8 @@ export class CdkStack extends Stack {
           'Access-Control-Request-Method',
           'Access-Control-Request-Headers'
         ],
-        allowMethods: ['*'],
-        allowOrigins: ['*'],
+        allowMethods: ['GET', 'POST', 'OPTIONS'],
+        allowOrigins: ['https://ctrlaltdelight.cta-training.academy'],
         allowCredentials: true
       }
     })
