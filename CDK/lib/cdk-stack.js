@@ -161,14 +161,9 @@ export class CdkStack extends Stack {
       bucketName: `${props.subDomain}-static-images`,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
       autoDeleteObjects: true,
-      publicReadAccess: true,
+      publicReadAccess: false,
       encryption: s3.BucketEncryption.S3_MANAGED,
-      blockPublicAccess: new s3.BlockPublicAccess({
-        blockPublicAcls: true,
-        ignorePublicAcls: true,
-        blockPublicPolicy: false,
-        restrictPublicBuckets: false
-      }),
+      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
       cors: [
         {
           // for training, keep it simple – allow everything
@@ -191,13 +186,7 @@ export class CdkStack extends Stack {
       autoDeleteObjects: true,
       publicReadAccess: false,
       encryption: s3.BucketEncryption.S3_MANAGED,
-      websiteIndexDocument: 'index.html',
-      blockPublicAccess: new s3.BlockPublicAccess({
-        blockPublicAcls: true,
-        ignorePublicAcls: true,
-        blockPublicPolicy: false,
-        restrictPublicBuckets: false
-      })
+      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL
     })
 
     clientBucket.addToResourcePolicy(
@@ -209,20 +198,28 @@ export class CdkStack extends Stack {
           clientBucket.arnForObjects('*')
         ],
         conditions: {
-          Bool: { 'aws:SecureTransport': 'false' }
+          Bool: { 'aws:SecureTransport': 'false' } 
         },
         principals: [new iam.AnyPrincipal()]
       })
     )
 
-    clientBucket.addToResourcePolicy(
+    staticImagesBucket.addToResourcePolicy(
       new iam.PolicyStatement({
-        effect: iam.Effect.ALLOW,
-        actions: ['s3:GetObject'],
-        resources: [clientBucket.arnForObjects('*')],
+        effect: iam.Effect.DENY,
+        actions: ['s3:*'],
+        resources: [
+          staticImagesBucket.bucketArn,
+          staticImagesBucket.arnForObjects('*')
+        ],
+        conditions: {
+          Bool: { 'aws:SecureTransport': 'false'} //https only policy 
+        },
         principals: [new iam.AnyPrincipal()]
       })
     )
+
+
     
     // ----------------------------------
     // Certificate
@@ -249,6 +246,18 @@ export class CdkStack extends Stack {
       queryStringBehavior:
         cloudfront.OriginRequestQueryStringBehavior.all()
     })
+
+    // New origin access identity
+    const clientOai = new cloudfront.OriginAccessIdentity(this, 'client-oai', {
+      comment: `${props.subDomain}-${props.environmentName}-client-oai`
+    })
+
+    const staticImagesOai = new cloudfront.OriginAccessIdentity(this, 'static-images-oai', {
+      comment: `${props.subDomain}-${props.environmentName}-static-images-oai`
+    })
+
+    clientBucket.grantRead(clientOai)
+    staticImagesBucket.grantRead(staticImagesOai)
 
     // ----------------------------------
     // Lambda bundling
@@ -458,7 +467,9 @@ export class CdkStack extends Stack {
 
     const clientDistribution = new cloudfront.Distribution(this, 'client-distribution', {
       defaultBehavior: {
-        origin: new origins.S3BucketOrigin(clientBucket),
+        origin: origins.S3BucketOrigin.withOriginAccessIdentity(clientBucket, {
+          OriginAccessIdentity: clientOai
+        }),
         viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
         originRequestPolicy: clientQueryPolicy,
         functionAssociations: [
@@ -514,7 +525,9 @@ export class CdkStack extends Stack {
 
     const staticImagesDistribution = new cloudfront.Distribution(this,'static-images-distribution',{
       defaultBehavior: {
-        origin: new origins.S3BucketOrigin(staticImagesBucket),
+        origin: origins.S3BucketOrigin.withOriginAccessIdentity(staticImagesBucket, {
+          originAccessIdentity: staticImagesOai
+        }),
         viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
         functionAssociations: [
           {
