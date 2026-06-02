@@ -422,7 +422,7 @@ export class CdkStack extends Stack {
           'Access-Control-Request-Headers'
         ],
         allowMethods: ['GET', 'POST', 'OPTIONS'],
-        allowOrigins: ['https://ctrlaltdelight.cta-training.academy'],
+        allowOrigins: ['https://ctrlaltdelight-dev.cta-training.academy', 'https://ctrlaltdelight-prod.cta-training.academy'],
         allowCredentials: true
       }
     })
