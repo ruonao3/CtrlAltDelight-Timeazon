@@ -166,11 +166,10 @@ export class CdkStack extends Stack {
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
       cors: [
         {
-          // for training, keep it simple – allow everything
-          allowedOrigins: ["*"],
+          allowedOrigins: [`https://${fullDomain}`], // only site can access images
           allowedMethods: [
             s3.HttpMethods.GET,
-            s3.HttpMethods.PUT,
+            // s3.HttpMethods.PUT,  -> not safe 
             s3.HttpMethods.HEAD
           ],
           allowedHeaders: ["*"],
