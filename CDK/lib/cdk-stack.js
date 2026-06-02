@@ -247,17 +247,17 @@ export class CdkStack extends Stack {
         cloudfront.OriginRequestQueryStringBehavior.all()
     })
 
-    // New origin access identity
-    const clientOai = new cloudfront.OriginAccessIdentity(this, 'client-oai', {
-      comment: `${props.subDomain}-${props.environmentName}-client-oai`
-    })
+    // // New origin access identity
+    // const clientOai = new cloudfront.OriginAccessIdentity(this, 'client-oai', {
+    //   comment: `${props.subDomain}-${props.environmentName}-client-oai`
+    // })
 
-    const staticImagesOai = new cloudfront.OriginAccessIdentity(this, 'static-images-oai', {
-      comment: `${props.subDomain}-${props.environmentName}-static-images-oai`
-    })
+    // const staticImagesOai = new cloudfront.OriginAccessIdentity(this, 'static-images-oai', {
+    //   comment: `${props.subDomain}-${props.environmentName}-static-images-oai`
+    // })
 
-    clientBucket.grantRead(clientOai)
-    staticImagesBucket.grantRead(staticImagesOai)
+    // clientBucket.grantRead(clientOai)
+    // staticImagesBucket.grantRead(staticImagesOai)
 
     // ----------------------------------
     // Lambda bundling
@@ -467,9 +467,7 @@ export class CdkStack extends Stack {
 
     const clientDistribution = new cloudfront.Distribution(this, 'client-distribution', {
       defaultBehavior: {
-        origin: origins.S3BucketOrigin.withOriginAccessIdentity(clientBucket, {
-          OriginAccessIdentity: clientOai
-        }),
+        origin: origins.S3BucketOrigin.withOriginAccessControl(clientBucket),
         viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
         originRequestPolicy: clientQueryPolicy,
         functionAssociations: [
@@ -526,9 +524,7 @@ export class CdkStack extends Stack {
 
     const staticImagesDistribution = new cloudfront.Distribution(this,'static-images-distribution',{
       defaultBehavior: {
-        origin: origins.S3BucketOrigin.withOriginAccessIdentity(staticImagesBucket, {
-          originAccessIdentity: staticImagesOai
-        }),
+        origin: origins.S3BucketOrigin.withOriginAccessControl(staticImagesBucket),
         viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
         functionAssociations: [
           {
