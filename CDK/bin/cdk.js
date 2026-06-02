@@ -22,40 +22,39 @@ const settings = {
   permissionsBoundaryPolicyName: 'scopePermissions',
   domainName: 'cta-training.academy', // Root domain
   subDomain: stackName.toLowerCase(),
-  dbName: 'dev',
+  dbName: `${environmentName}`,
   vpcName: 'CTASharedVPC-vpc'
 }
 
 const app = new cdk.App();
-if(environmentName==='dev'){
-  const DevStack= new CdkStack(app, 'CdkStackDev', {
-    env: settings.env,
-    permissionsBoundaryPolicyName: settings.permissionsBoundaryPolicyName,
-    subDomain: `${settings.subDomain}-dev`,
-    stackName: `${stackName}-dev`,
-    certArn: settings.certArn,
-    domainName: settings.domainName,
-    dbName: settings.dbName,
-    vpcName: settings.vpcName,
-    environmentName: 'dev',
-    devWebAclArn: settings.devWebAclArn
-  });
-}
+const DevStack= new CdkStack(app, `CdkStack${environmentName}`, {
+  env: settings.env,
+  permissionsBoundaryPolicyName: settings.permissionsBoundaryPolicyName,
+  subDomain: `${settings.subDomain}-${environmentName}`,
+  stackName: `${stackName}-${environmentName}`,
+  certArn: settings.certArn,
+  domainName: settings.domainName,
+  dbName: `${environmentName}`,
+  vpcName: settings.vpcName,
+  environmentName: `${environmentName}`,
+  devWebAclArn: settings.devWebAclArn
+});
 
-if(environmentName==='prod'){
-  const ProdStack= new CdkStack(app, 'CdkStackProd', {
-    env: settings.env,
-    permissionsBoundaryPolicyName: settings.permissionsBoundaryPolicyName,
-    subDomain: `${settings.subDomain}-prod`,
-    stackName: `${stackName}-prod`,
-    certArn: settings.certArn,
-    domainName: settings.domainName,
-    dbName: settings.dbName,
-    vpcName: settings.vpcName,
-    environmentName: 'prod',
-    devWebAclArn: undefined
-  });
-}
+
+// if(environmentName==='prod'){
+//   const ProdStack= new CdkStack(app, 'CdkStackProd', {
+//     env: settings.env,
+//     permissionsBoundaryPolicyName: settings.permissionsBoundaryPolicyName,
+//     subDomain: `${settings.subDomain}-prod`,
+//     stackName: `${stackName}-prod`,
+//     certArn: settings.certArn,
+//     domainName: settings.domainName,
+//     dbName: settings.dbName,
+//     vpcName: settings.vpcName,
+//     environmentName: 'prod',
+//     devWebAclArn: undefined
+//   });
+// }
 // new CdkStack(app, 'CdkStack', {
 //   env: settings.env,
 //   permissionsBoundaryPolicyName: settings.permissionsBoundaryPolicyName,
