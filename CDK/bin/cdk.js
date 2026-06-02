@@ -1,34 +1,37 @@
 #!/usr/bin/env node
-import * as cdk from 'aws-cdk-lib';
-import { CdkStack } from '../lib/cdk-stack.js';
+import * as cdk from "aws-cdk-lib";
+import { CdkStack } from "../lib/cdk-stack.js";
 
 //const stackName = 'CtrlAltDelight'
 
-const stackName = process.env.GROUP_PROJECT_STACK_NAME
-const environmentName=process.env.APP_ENV || 'dev'
+const stackName = process.env.GROUP_PROJECT_STACK_NAME;
+const environmentName = process.env.APP_ENV || "dev";
 
 if (!stackName || !stackName.trim()) {
-  console.error('Environment variable GROUP_PROJECT_STACK_NAME is not set')
-  process.exit(1)
+  console.error("Environment variable GROUP_PROJECT_STACK_NAME is not set");
+  process.exit(1);
 }
 
 const settings = {
   env: {
-    account: process.env.CDK_DEFAULT_ACCOUNT || 'NOT_SET',
-    region: process.env.CDK_DEFAULT_REGION || 'NOT_SET'
+    account: process.env.CDK_DEFAULT_ACCOUNT || "NOT_SET",
+    region: process.env.CDK_DEFAULT_REGION || "NOT_SET",
   },
   stackName: stackName,
-  certArn: cdk.Fn.importValue('CTASharedCertArn'), // SSL cert for HTTPS
-  permissionsBoundaryPolicyName: 'scopePermissions',
-  domainName: 'cta-training.academy', // Root domain
+  certArn: cdk.Fn.importValue("CTASharedCertArn"), // SSL cert for HTTPS
+  permissionsBoundaryPolicyName: "scopePermissions",
+  domainName: "cta-training.academy", // Root domain
   subDomain: stackName.toLowerCase(),
-  dbName: 'dev',
-  vpcName: 'CTASharedVPC-vpc'
-}
+  // For the context of training it has been hardcoded but for a real production system it wouldn't
+  // be exposed and would be managed by AWS Secrets Manager
+  authToken: "CtrlAltDelightAPIToken",
+  dbName: "dev",
+  vpcName: "CTASharedVPC-vpc",
+};
 
 const app = new cdk.App();
-if(environmentName==='dev'){
-  const DevStack= new CdkStack(app, 'CdkStackDev', {
+if (environmentName === "dev") {
+  const DevStack = new CdkStack(app, "CdkStackDev", {
     env: settings.env,
     permissionsBoundaryPolicyName: settings.permissionsBoundaryPolicyName,
     subDomain: `${settings.subDomain}-dev`,
@@ -37,15 +40,14 @@ if(environmentName==='dev'){
     domainName: settings.domainName,
     dbName: settings.dbName,
     vpcName: settings.vpcName,
-    environmentName: 'dev',
-    devWebAclArn: settings.devWebAclArn
+    authToken: settings.authToken,
+    environmentName: "dev",
+    devWebAclArn: settings.devWebAclArn,
   });
 }
 
-
-
-if(environmentName==='prod'){
-  const ProdStack= new CdkStack(app, 'CdkStackProd', {
+if (environmentName === "prod") {
+  const ProdStack = new CdkStack(app, "CdkStackProd", {
     env: settings.env,
     permissionsBoundaryPolicyName: settings.permissionsBoundaryPolicyName,
     subDomain: `${settings.subDomain}-prod`,
@@ -54,8 +56,9 @@ if(environmentName==='prod'){
     domainName: settings.domainName,
     dbName: settings.dbName,
     vpcName: settings.vpcName,
-    environmentName: 'prod',
-    devWebAclArn: undefined
+    authToken: settings.authToken,
+    environmentName: "prod",
+    devWebAclArn: undefined,
   });
 }
 // new CdkStack(app, 'CdkStack', {
@@ -69,4 +72,3 @@ if(environmentName==='prod'){
 //   vpcName: settings.vpcName,
 //   environmentName: environmentName
 // });
-
