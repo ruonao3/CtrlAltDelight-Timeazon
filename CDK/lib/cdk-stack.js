@@ -508,7 +508,7 @@ export class CdkStack extends Stack {
       priceClass: cloudfront.PriceClass.PRICE_CLASS_100,
       domainNames: [fullDomain],
       certificate: cert,
-      webAclId: devWebAclArn
+      webAclId: props.devWebAclArn
     })
 
     new s3Deployment.BucketDeployment(this, 'client-deployment', {
@@ -540,7 +540,7 @@ export class CdkStack extends Stack {
       priceClass: cloudfront.PriceClass.PRICE_CLASS_100,
       domainNames: [staticImagesInS3Domain],
       certificate: cert,
-      webAclId: devWebAclArn
+      webAclId: props.devWebAclArn
     })
 
     new s3Deployment.BucketDeployment(this, 'static-images-deployment', {
