@@ -22,16 +22,10 @@ const settings = {
   permissionsBoundaryPolicyName: "scopePermissions",
   domainName: "cta-training.academy", // Root domain
   subDomain: stackName.toLowerCase(),
-  // For the context of training it has been hardcoded but for a real production system it wouldn't
-  // be exposed and would be managed by AWS Secrets Manager
-  authToken: "CtrlAltDelightAPIToken",
-  dbName: environmentName,
-  vpcName: "CTASharedVPC-vpc",
-  devWebAclArn:
-    environmentName == "dev"
-      ? "arn:aws:wafv2:us-east-1:827602716979:global/webacl/CtrlAltDelight-dev-waf/961fc0b7-1dae-42f3-a00d-8097b965a4c1"
-      : undefined,
-};
+  dbName: `${environmentName}`,
+  vpcName: 'CTASharedVPC-vpc',
+  devWebAclArn: environmentName == 'dev' ? 'arn:aws:wafv2:us-east-1:827602716979:global/webacl/CtrlAltDelight-dev-waf/961fc0b7-1dae-42f3-a00d-8097b965a4c1' : undefined
+}
 
 const app = new cdk.App();
 if (environmentName === "dev") {
