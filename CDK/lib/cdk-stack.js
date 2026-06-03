@@ -29,6 +29,7 @@ import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
  * authToken: string,
  * dbName: string,
  * certArn:string,
+ * devWebAclArn?: string,
  * environmentName: 'dev' | 'prod'
  * }} CdkStackProps
  */
@@ -617,6 +618,7 @@ export class CdkStack extends Stack {
         priceClass: cloudfront.PriceClass.PRICE_CLASS_100,
         domainNames: [fullDomain],
         certificate: cert,
+        webAclId: devWebAclArn,
       },
     );
 
@@ -656,6 +658,7 @@ export class CdkStack extends Stack {
         priceClass: cloudfront.PriceClass.PRICE_CLASS_100,
         domainNames: [staticImagesInS3Domain],
         certificate: cert,
+        webAclId: devWebAclArn,
       },
     );
 
