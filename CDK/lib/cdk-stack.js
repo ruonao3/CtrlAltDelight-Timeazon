@@ -290,9 +290,6 @@ export class CdkStack extends Stack {
 
       // DynamoDB – cart
       CART_TABLE_NAME: cartTable.tableName,
-
-      // API Authoriser Token
-      AUTH_TOKEN: props.authToken,
     };
 
     // ----------------------------------
@@ -320,7 +317,11 @@ export class CdkStack extends Stack {
       runtime: lambda.Runtime.NODEJS_22_X,
       handler: "utility-functions.postProductHandler",
       code: lambda.Code.fromAsset("functions"),
-      environment: lambdaEnvVars,
+      environment: {
+        ...lambdaEnvVars,
+        // API Authoriser Token
+        AUTH_TOKEN: props.authToken,
+      },
     });
 
     const deleteProductLambda = new lambda.Function(
@@ -331,7 +332,11 @@ export class CdkStack extends Stack {
         runtime: lambda.Runtime.NODEJS_22_X,
         handler: "utility-functions.deleteProductHandler",
         code: lambda.Code.fromAsset("functions"),
-        environment: lambdaEnvVars,
+        environment: {
+          ...lambdaEnvVars,
+          // API Authoriser Token
+          AUTH_TOKEN: props.authToken,
+        },
       },
     );
 
@@ -382,7 +387,11 @@ export class CdkStack extends Stack {
       runtime: lambda.Runtime.NODEJS_22_X,
       handler: "addToCart.postToCartHandler",
       code: lambda.Code.fromAsset("functions"),
-      environment: lambdaEnvVars,
+      environment: {
+        ...lambdaEnvVars,
+        // API Authoriser Token
+        AUTH_TOKEN: props.authToken,
+      },
     });
 
     const getToCartLambda = new lambda.Function(this, "get-tocart-lambda", {
@@ -390,7 +399,11 @@ export class CdkStack extends Stack {
       runtime: lambda.Runtime.NODEJS_22_X,
       handler: "addToCart.getToCartHandler",
       code: lambda.Code.fromAsset("functions"),
-      environment: lambdaEnvVars,
+      environment: {
+        ...lambdaEnvVars,
+        // API Authoriser Token
+        AUTH_TOKEN: props.authToken,
+      },
     });
 
     const deleteFromCartLambda = new lambda.Function(
@@ -401,7 +414,11 @@ export class CdkStack extends Stack {
         runtime: lambda.Runtime.NODEJS_22_X,
         handler: "addToCart.deleteFromCartHandler",
         code: lambda.Code.fromAsset("functions"),
-        environment: lambdaEnvVars,
+        environment: {
+          ...lambdaEnvVars,
+          // API Authoriser Token
+          AUTH_TOKEN: props.authToken,
+        },
       },
     );
 
