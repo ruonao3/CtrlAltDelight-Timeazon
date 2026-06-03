@@ -25,7 +25,7 @@ const settings = {
   // For the context of training it has been hardcoded but for a real production system it wouldn't
   // be exposed and would be managed by AWS Secrets Manager
   authToken: "CtrlAltDelightAPIToken",
-  dbName: "dev",
+  dbName: environmentName,
   vpcName: "CTASharedVPC-vpc",
   devWebAclArn:
     environmentName == "dev"
