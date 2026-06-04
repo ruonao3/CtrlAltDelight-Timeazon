@@ -164,7 +164,7 @@ export class CdkStack extends Stack {
       bucketName: `${props.subDomain}-static-images`,
       removalPolicy: isProd ? cdk.RemovalPolicy.RETAIN : cdk.RemovalPolicy.DESTROY,
       autoDeleteObjects: isProd ? undefined : true,
-      publicReadAccess: true,
+      publicReadAccess: false,
       encryption: s3.BucketEncryption.S3_MANAGED,
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
       cors: [
@@ -603,7 +603,7 @@ export class CdkStack extends Stack {
       priceClass: cloudfront.PriceClass.PRICE_CLASS_100,
       domainNames: [fullDomain],
       certificate: cert,
-      webAclId: devWebAclArn
+      webAclId: props.devWebAclArn
     })
 
     new s3Deployment.BucketDeployment(this, "client-deployment", {
@@ -633,7 +633,7 @@ export class CdkStack extends Stack {
       priceClass: cloudfront.PriceClass.PRICE_CLASS_100,
       domainNames: [staticImagesInS3Domain],
       certificate: cert,
-      webAclId: devWebAclArn
+      webAclId: props.devWebAclArn
     })
 
     new s3Deployment.BucketDeployment(this, "static-images-deployment", {

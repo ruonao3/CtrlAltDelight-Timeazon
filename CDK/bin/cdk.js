@@ -26,7 +26,8 @@ const settings = {
   subDomain: stackName.toLowerCase(),
   authToken: "CtrlAltDelightAPIToken",
   dbName: `${environmentName}`,
-  vpcName: 'CTASharedVPC-vpc'
+  vpcName: 'CTASharedVPC-vpc',
+  devWebAclArn: environmentName == 'dev' ? 'arn:aws:wafv2:us-east-1:827602716979:global/webacl/CtrlAltDelight-dev-waf/961fc0b7-1dae-42f3-a00d-8097b965a4c1' : undefined
 }
 
 
