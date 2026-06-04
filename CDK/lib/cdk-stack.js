@@ -252,21 +252,17 @@ export class CdkStack extends Stack {
       },
     );
 
-    // New origin access identity
-    const clientOai = new cloudfront.OriginAccessIdentity(this, "client-oai", {
-      comment: `${props.subDomain}-${props.environmentName}-client-oai`,
-    });
+    // // New origin access identity
+    // const clientOai = new cloudfront.OriginAccessIdentity(this, 'client-oai', {
+    //   comment: `${props.subDomain}-${props.environmentName}-client-oai`
+    // })
 
-    const staticImagesOai = new cloudfront.OriginAccessIdentity(
-      this,
-      "static-images-oai",
-      {
-        comment: `${props.subDomain}-${props.environmentName}-static-images-oai`,
-      },
-    );
+    // const staticImagesOai = new cloudfront.OriginAccessIdentity(this, 'static-images-oai', {
+    //   comment: `${props.subDomain}-${props.environmentName}-static-images-oai`
+    // })
 
-    clientBucket.grantRead(clientOai);
-    staticImagesBucket.grantRead(staticImagesOai);
+    // clientBucket.grantRead(clientOai)
+    // staticImagesBucket.grantRead(staticImagesOai)
 
     // ----------------------------------
     // Lambda bundling
@@ -566,61 +562,49 @@ export class CdkStack extends Stack {
     // CloudFront distributions
     // ----------------------------------
 
-    const clientDistribution = new cloudfront.Distribution(
-      this,
-      "client-distribution",
-      {
-        defaultBehavior: {
-          origin: origins.S3BucketOrigin.withOriginAccessIdentity(
-            clientBucket,
-            {
-              OriginAccessIdentity: clientOai,
-            },
-          ),
-          viewerProtocolPolicy:
-            cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-          originRequestPolicy: clientQueryPolicy,
-          functionAssociations: [
-            {
-              eventType: cloudfront.FunctionEventType.VIEWER_REQUEST,
-              function: redirectsFunction,
-            },
-          ],
-        },
-        additionalBehaviors: {
-          "/api/*": {
-            origin: new origins.HttpOrigin(
-              `${api.restApiId}.execute-api.${props.env.region}.amazonaws.com`,
-            ),
-            viewerProtocolPolicy:
-              cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-            allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
-            cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED,
-            originRequestPolicy:
-              cloudfront.OriginRequestPolicy.ALL_VIEWER_EXCEPT_HOST_HEADER,
-          },
-        },
-        errorResponses: [
+    const clientDistribution = new cloudfront.Distribution(this, 'client-distribution', {
+      defaultBehavior: {
+        origin: origins.S3BucketOrigin.withOriginAccessControl(clientBucket),
+        viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+        originRequestPolicy: clientQueryPolicy,
+        functionAssociations: [
           {
-            httpStatus: 403,
-            responseHttpStatus: 200,
-            responsePagePath: "/index.html",
-            ttl: cdk.Duration.seconds(0),
-          },
-          {
-            httpStatus: 404,
-            responseHttpStatus: 200,
-            responsePagePath: "/index.html",
-            ttl: cdk.Duration.seconds(0),
-          },
-        ],
-        defaultRootObject: "index.html",
-        priceClass: cloudfront.PriceClass.PRICE_CLASS_100,
-        domainNames: [fullDomain],
-        certificate: cert,
-        webAclId: props.devWebAclArn,
+            eventType: cloudfront.FunctionEventType.VIEWER_REQUEST,
+            function: redirectsFunction
+          }
+        ]
       },
-    );
+      additionalBehaviors: {
+        '/api/*': {
+          origin: new origins.HttpOrigin(
+            `${api.restApiId}.execute-api.${props.env.region}.amazonaws.com`
+          ),
+          viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+          allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
+          cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED,
+          originRequestPolicy: cloudfront.OriginRequestPolicy.ALL_VIEWER_EXCEPT_HOST_HEADER
+        }
+      },
+      errorResponses: [
+        {
+          httpStatus: 403,
+          responseHttpStatus: 200,
+          responsePagePath: '/index.html',
+          ttl: cdk.Duration.seconds(0)
+        },
+        {
+          httpStatus: 404,
+          responseHttpStatus: 200,
+          responsePagePath: '/index.html',
+          ttl: cdk.Duration.seconds(0)
+        }
+      ],
+      defaultRootObject: 'index.html',
+      priceClass: cloudfront.PriceClass.PRICE_CLASS_100,
+      domainNames: [fullDomain],
+      certificate: cert,
+      webAclId: devWebAclArn
+    })
 
     new s3Deployment.BucketDeployment(this, "client-deployment", {
       destinationBucket: clientBucket,
@@ -635,32 +619,22 @@ export class CdkStack extends Stack {
       distributionPaths: ["/*"],
     });
 
-    const staticImagesDistribution = new cloudfront.Distribution(
-      this,
-      "static-images-distribution",
-      {
-        defaultBehavior: {
-          origin: origins.S3BucketOrigin.withOriginAccessIdentity(
-            staticImagesBucket,
-            {
-              originAccessIdentity: staticImagesOai,
-            },
-          ),
-          viewerProtocolPolicy:
-            cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-          functionAssociations: [
-            {
-              eventType: cloudfront.FunctionEventType.VIEWER_REQUEST,
-              function: redirectsFunction,
-            },
-          ],
-        },
-        priceClass: cloudfront.PriceClass.PRICE_CLASS_100,
-        domainNames: [staticImagesInS3Domain],
-        certificate: cert,
-        webAclId: props.devWebAclArn,
+    const staticImagesDistribution = new cloudfront.Distribution(this,'static-images-distribution',{
+      defaultBehavior: {
+        origin: origins.S3BucketOrigin.withOriginAccessControl(staticImagesBucket),
+        viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+        functionAssociations: [
+          {
+            eventType: cloudfront.FunctionEventType.VIEWER_REQUEST,
+            function: redirectsFunction
+          }
+        ]
       },
-    );
+      priceClass: cloudfront.PriceClass.PRICE_CLASS_100,
+      domainNames: [staticImagesInS3Domain],
+      certificate: cert,
+      webAclId: devWebAclArn
+    })
 
     new s3Deployment.BucketDeployment(this, "static-images-deployment", {
       destinationBucket: staticImagesBucket,
