@@ -4,8 +4,10 @@ import { CdkStack } from "../lib/cdk-stack.js";
 
 //const stackName = 'CtrlAltDelight'
 
-const stackName = process.env.GROUP_PROJECT_STACK_NAME;
-const environmentName = process.env.APP_ENV || "dev";
+const stackName = process.env.GROUP_PROJECT_STACK_NAME
+const environmentName=process.env.APP_ENV || 'dev'
+const isD=environmentName==='dev'
+
 
 if (!stackName || !stackName.trim()) {
   console.error("Environment variable GROUP_PROJECT_STACK_NAME is not set");
@@ -22,43 +24,43 @@ const settings = {
   permissionsBoundaryPolicyName: "scopePermissions",
   domainName: "cta-training.academy", // Root domain
   subDomain: stackName.toLowerCase(),
+  authToken: "CtrlAltDelightAPIToken",
   dbName: `${environmentName}`,
-  vpcName: 'CTASharedVPC-vpc',
-  devWebAclArn: environmentName == 'dev' ? 'arn:aws:wafv2:us-east-1:827602716979:global/webacl/CtrlAltDelight-dev-waf/961fc0b7-1dae-42f3-a00d-8097b965a4c1' : undefined
+  vpcName: 'CTASharedVPC-vpc'
 }
+
 
 const app = new cdk.App();
-if (environmentName === "dev") {
-  const DevStack = new CdkStack(app, "CdkStackDev", {
-    env: settings.env,
-    permissionsBoundaryPolicyName: settings.permissionsBoundaryPolicyName,
-    subDomain: `${settings.subDomain}-dev`,
-    stackName: `${stackName}-dev`,
-    certArn: settings.certArn,
-    domainName: settings.domainName,
-    dbName: settings.dbName,
-    vpcName: settings.vpcName,
-    authToken: settings.authToken,
-    environmentName: "dev",
-    devWebAclArn: settings.devWebAclArn,
-  });
-}
 
-if (environmentName === "prod") {
-  const ProdStack = new CdkStack(app, "CdkStackProd", {
-    env: settings.env,
-    permissionsBoundaryPolicyName: settings.permissionsBoundaryPolicyName,
-    subDomain: `${settings.subDomain}-prod`,
-    stackName: `${stackName}-prod`,
-    certArn: settings.certArn,
-    domainName: settings.domainName,
-    dbName: settings.dbName,
-    vpcName: settings.vpcName,
-    authToken: settings.authToken,
-    environmentName: "prod",
-    devWebAclArn: undefined,
-  });
-}
+const isP=environmentName==='prod'
+const DevStack= new CdkStack(app, 'CdkStackDev', {
+  env: settings.env,
+  permissionsBoundaryPolicyName: settings.permissionsBoundaryPolicyName,
+  subDomain: `${settings.subDomain}-${environmentName}`,
+  stackName: `${stackName}-${environmentName}`,
+  certArn: settings.certArn,
+  domainName: settings.domainName,
+  dbName: settings.dbName,
+  vpcName: settings.vpcName,
+  environmentName: `${environmentName}`,
+  devWebAclArn: isP ? undefined : settings.devWebAclArn, 
+});
+
+
+// if(environmentName==='prod'){
+//   const ProdStack= new CdkStack(app, 'CdkStackProd', {
+//     env: settings.env,
+//     permissionsBoundaryPolicyName: settings.permissionsBoundaryPolicyName,
+//     subDomain: `${settings.subDomain}-prod`,
+//     stackName: `${stackName}-prod`,
+//     certArn: settings.certArn,
+//     domainName: settings.domainName,
+//     dbName: settings.dbName,
+//     vpcName: settings.vpcName,
+//     environmentName: 'prod',
+//     devWebAclArn: undefined
+//   });
+// }
 // new CdkStack(app, 'CdkStack', {
 //   env: settings.env,
 //   permissionsBoundaryPolicyName: settings.permissionsBoundaryPolicyName,

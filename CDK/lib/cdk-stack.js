@@ -103,7 +103,7 @@ export class CdkStack extends Stack {
         name: `${props.subDomain}-ParameterGroup`,
         engine: postgresEngine,
         description: `${props.subDomain} parameter group with SSL enforced`,
-        removalPolicy: cdk.RemovalPolicy.DESTROY,
+        removalPolicy: isProd ? cdk.RemovalPolicy.RETAIN : cdk.RemovalPolicy.DESTROY,
         parameters: {
           "rds.force_ssl": "1", // require SSL for database connections
         },
@@ -132,8 +132,8 @@ export class CdkStack extends Stack {
       enableDataApi: true,
 
       // Tear the database down with the stack (fine for a lab, not for prod)
-      removalPolicy: cdk.RemovalPolicy.DESTROY,
-    });
+      removalPolicy: isProd ? cdk.RemovalPolicy.RETAIN : cdk.RemovalPolicy.DESTROY,
+    })
 
     // ----------------------------------
     // DynamoDB tables
@@ -144,8 +144,8 @@ export class CdkStack extends Stack {
       tableName: `${props.subDomain}-users`,
       partitionKey: { name: "email", type: dynamodb.AttributeType.STRING },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
-      removalPolicy: cdk.RemovalPolicy.DESTROY,
-    });
+      removalPolicy: isProd ? cdk.RemovalPolicy.RETAIN : cdk.RemovalPolicy.DESTROY,
+    })
 
     // Cart table (many items per user)
     const cartTable = new dynamodb.Table(this, "cart-table", {
@@ -153,8 +153,8 @@ export class CdkStack extends Stack {
       partitionKey: { name: "email", type: dynamodb.AttributeType.STRING },
       sortKey: { name: "productId", type: dynamodb.AttributeType.STRING },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
-      removalPolicy: cdk.RemovalPolicy.DESTROY,
-    });
+      removalPolicy: isProd ? cdk.RemovalPolicy.RETAIN : cdk.RemovalPolicy.DESTROY,
+    })
 
     // ----------------------------------
     // S3 buckets
@@ -162,9 +162,9 @@ export class CdkStack extends Stack {
 
     const staticImagesBucket = new s3.Bucket(this, "static-images", {
       bucketName: `${props.subDomain}-static-images`,
-      removalPolicy: cdk.RemovalPolicy.DESTROY,
-      autoDeleteObjects: true,
-      publicReadAccess: false,
+      removalPolicy: isProd ? cdk.RemovalPolicy.RETAIN : cdk.RemovalPolicy.DESTROY,
+      autoDeleteObjects: isProd ? undefined : true,
+      publicReadAccess: true,
       encryption: s3.BucketEncryption.S3_MANAGED,
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
       cors: [
@@ -184,8 +184,8 @@ export class CdkStack extends Stack {
 
     const clientBucket = new s3.Bucket(this, "client-bucket", {
       bucketName: `${props.subDomain}-client-bucket`,
-      removalPolicy: cdk.RemovalPolicy.DESTROY,
-      autoDeleteObjects: true,
+      removalPolicy: isProd ? cdk.RemovalPolicy.RETAIN : cdk.RemovalPolicy.DESTROY,
+      autoDeleteObjects: isProd ? undefined : true,
       publicReadAccess: false,
       encryption: s3.BucketEncryption.S3_MANAGED,
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
