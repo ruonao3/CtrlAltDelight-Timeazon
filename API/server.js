@@ -47,10 +47,6 @@ app.post("/api/bootstrap", bootstrap);
 
 app.post("/api/login", loginUser);
 
-app.delete("/api/products", (request, response) => {
-  runHandler(deleteProductHandler, request, response);
-});
-
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
