@@ -11,11 +11,7 @@ import {
   getImageUploadUrlHandler,
 } from "../CDK/functions/utility-functions.js";
 import { postUsersHandler, loginHandler } from "../CDK/functions/users.js";
-import {
-  postToCartHandler,
-  getToCartHandler,
-  deleteFromCartHandler,
-} from "../CDK/functions/addToCart.js";
+import { addToCart, getCart, removeFromCart } from './controllers/cart.controller.js'
 
 // Creating express app
 const app = express();
@@ -78,6 +74,10 @@ app.post("/api/products", (request, response) => {
 app.delete("/api/products", (request, response) => {
   runHandler(deleteProductHandler, request, response);
 });
+
+app.get('/api/addtocart', getCart)
+app.post('/api/addtocart', addToCart)
+app.delete('/api/addtocart', removeFromCart)
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
