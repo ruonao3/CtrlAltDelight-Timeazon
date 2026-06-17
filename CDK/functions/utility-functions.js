@@ -1,16 +1,15 @@
 // functions/utility-functions.js
-import { runQuery, bootstrapDatabase } from './db.js';
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3"
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner"
+import { runQuery, bootstrapDatabase } from "./db.js";
+import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
-const s3 = new S3Client({})
-
+const s3 = new S3Client({});
 
 // Small helper to keep responses consistent
 function jsonResponse(statusCode, payload) {
   return {
     statusCode,
-    body: JSON.stringify(payload)
+    body: JSON.stringify(payload),
   };
 }
 
@@ -24,71 +23,71 @@ const normaliseRows = (result) => {
 };
 
 const logInvocationDetails = (event, context) => {
-  console.log('Event received:');
+  console.log("Event received:");
   console.log(JSON.stringify(event, null, 2));
 
   if (context) {
-    console.log('Context received:');
+    console.log("Context received:");
     console.log({
       functionName: context.functionName,
       functionVersion: context.functionVersion,
       awsRequestId: context.awsRequestId,
-      remainingTimeMs: context.getRemainingTimeInMillis()
+      remainingTimeMs: context.getRemainingTimeInMillis(),
     });
   }
 };
 
 // -------------------------
-// S3 HANDLER 
+// S3 HANDLER
 // -------------------------
 
 export const getImageUploadUrlHandler = async (event) => {
   try {
-    const body = JSON.parse(event.body || "{}")
-    const { fileName, fileType } = body
+    const body = JSON.parse(event.body || "{}");
+    const { fileName, fileType } = body;
 
     if (!fileName || !fileType) {
       return {
         statusCode: 400,
-        body: JSON.stringify({ message: "fileName and fileType are required" })
-      }
+        body: JSON.stringify({ message: "fileName and fileType are required" }),
+      };
     }
 
-    const bucketName = process.env.STATIC_IMAGES_BUCKET
-    const baseUrl = process.env.STATIC_IMAGES_BASE_URL
+    const bucketName = process.env.STATIC_IMAGES_BUCKET;
+    const baseUrl = process.env.STATIC_IMAGES_BASE_URL;
 
-    const safeName = fileName.replace(/[^a-zA-Z0-9.\-_]/g, "_")
-    const key = safeName
+    const safeName = fileName.replace(/[^a-zA-Z0-9.\-_]/g, "_");
+    const key = safeName;
     const command = new PutObjectCommand({
       Bucket: bucketName,
       Key: key,
-      ContentType: fileType
-    })
+      ContentType: fileType,
+    });
 
-    const uploadUrl = await getSignedUrl(s3, command, { expiresIn: 60 * 5 })
+    const uploadUrl = await getSignedUrl(s3, command, { expiresIn: 60 * 5 });
 
-    const finalUrl = `${baseUrl}/${key}`
+    const finalUrl = `${baseUrl}/${key}`;
 
     return {
       statusCode: 200,
       headers: {
         "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Headers": "Content-Type"
+        "Access-Control-Allow-Headers": "Content-Type",
       },
       body: JSON.stringify({
         uploadUrl,
         finalUrl,
-        key
-      })
-    }
+        key,
+      }),
+    };
   } catch (err) {
-    console.error(err)
+    console.error(err);
     return {
       statusCode: 500,
-      body: JSON.stringify({ message: "Could not create upload url" })
-    }
+      body: JSON.stringify({ message: "Could not create upload url" }),
+    };
   }
-}
+};
 
 // -------------------------
 // BOOTSTRAP HANDLER (optional)
@@ -100,15 +99,15 @@ export const bootstrapHandler = async (event, context) => {
     const code = await bootstrapDatabase();
 
     return jsonResponse(code, {
-      status: 'ok',
-      message: 'Database reset and seeded with sample timeazon data'
+      status: "ok",
+      message: "Database reset and seeded with sample timeazon data",
     });
   } catch (err) {
-    console.error('bootstrapHandler error:', err);
+    console.error("bootstrapHandler error:", err);
 
     return jsonResponse(500, {
-      status: 'error',
-      message: 'Failed to bootstrap database'
+      status: "error",
+      message: "Failed to bootstrap database",
     });
   }
 };
@@ -123,19 +122,15 @@ export const productCatalogHandler = async () => {
       FROM products;
     `);
 
-    const products =
-      result?.records ||
-      result?.rows ||
-      [];
+    const products = result?.records || result?.rows || [];
 
     return {
       statusCode: 200,
       body: JSON.stringify({
         status: "ok",
-        products
-      })
+        products,
+      }),
     };
-
   } catch (error) {
     console.error("Catalog error:", error);
 
@@ -143,14 +138,14 @@ export const productCatalogHandler = async () => {
       statusCode: 500,
       body: JSON.stringify({
         status: "error",
-        message: "Failed to load products"
-      })
+        message: "Failed to load products",
+      }),
     };
   }
 };
 
-  // try {
-    
+// try {
+
 //     const result = await runQuery(`
 //       SELECT name, description, price_credit, image_url, era
 //       FROM products;
@@ -200,8 +195,8 @@ export const postProductHandler = async (event) => {
         statusCode: 400,
         body: JSON.stringify({
           status: "error",
-          message: "name and price_credit required"
-        })
+          message: "name and price_credit required",
+        }),
       };
     }
 
@@ -216,21 +211,18 @@ export const postProductHandler = async (event) => {
       description: body.description || "",
       price_credit: body.price_credit,
       image_url: body.image_url || "",
-      era: body.era || ""
+      era: body.era || "",
     });
 
-    const product =
-      result?.records?.[0] ||
-      result?.rows?.[0];
+    const product = result?.records?.[0] || result?.rows?.[0];
 
     return {
       statusCode: 201,
       body: JSON.stringify({
         status: "created",
-        product
-      })
+        product,
+      }),
     };
-
   } catch (error) {
     console.error("Error creating product:", error);
 
@@ -238,84 +230,77 @@ export const postProductHandler = async (event) => {
       statusCode: 500,
       body: JSON.stringify({
         status: "error",
-        message: "Could not create product"
-      })
+        message: "Could not create product",
+      }),
     };
   }
 };
 
 export const deleteProductHandler = async (event) => {
   try {
-    const id =event.pathParameters?.id;
+    const id = event.pathParameters?.id;
 
     if (!id) {
       return {
         statusCode: 400,
         body: JSON.stringify({
           status: "error",
-          message: "Product Id is required"
-        })
+          message: "Product Id is required",
+        }),
       };
     }
-  
-  const deleteSQL = `
+
+    const deleteSQL = `
     DELETE FROM product
     WHERE id = :id
     RETURNING id, name, description, price_credit, image_url, era   
     `;
 
-  const result = await runQuery(deleteSQL, { 
-    id 
-  });
+    const result = await runQuery(deleteSQL, {
+      id,
+    });
 
-  const product = 
-    result?.records?.[0] ||
-    result?.rows?.[0];
+    const product = result?.records?.[0] || result?.rows?.[0];
 
-  if (!product) {
+    if (!product) {
+      return {
+        statusCode: 404,
+        body: JSON.stringify({
+          status: "error",
+          message: "Product not found",
+        }),
+      };
+    }
+
     return {
-      statusCode: 404,
+      statusCode: 200,
       body: JSON.stringify({
-        status: "error",
-        message: "Product not found"
-      })
+        status: "deleted",
+        product,
+      }),
     };
-  }
-  
-  return {
-    statusCode: 200,
-    body: JSON.stringify({
-      status: "deleted",
-      product
-    })
-  };
-
-} catch (error) {
+  } catch (error) {
     console.error("Error creating product:", error);
 
     return {
       statusCode: 500,
       body: JSON.stringify({
         status: "error",
-        message: "Could not create product"
-      })
+        message: "Could not create product",
+      }),
     };
   }
 };
 
-
-
-
-
-  //Signup 
-  export const postUsersHandler = async (event, context) => {
+//Signup
+export const postUsersHandler = async (event, context) => {
   logInvocationDetails(event, context);
 
   try {
     if (!event.body) {
       return jsonResponse(400, {
-        status: 'error',
-        message: 'Request body is required'
+        status: "error",
+        message: "Request body is required",
       });
     }
 
@@ -324,31 +309,30 @@ export const deleteProductHandler = async (event) => {
     // Basic validation
     if (!user_id || !name || !username || !email) {
       return jsonResponse(400, {
-        status: 'error',
-        message: 'username, email and password are required'
+        status: "error",
+        message: "username, email and password are required",
       });
     }
 
     // For now, just echo back what was sent
     return jsonResponse(201, {
-      status: 'User created successfully',
+      status: "User created successfully",
       user: {
         user_id,
         name,
         username,
-        email
-      }
+        email,
+      },
     });
-
   } catch (error) {
-    console.error('postUsersHandler error:', error);
+    console.error("postUsersHandler error:", error);
 
     return jsonResponse(500, {
-      status: 'error',
-      message: 'Failed to create user'
+      status: "error",
+      message: "Failed to create user",
     });
   }
-}
+};
 
 export const loginHandler = async (event, context) => {
   logInvocationDetails(event, context);
@@ -356,8 +340,8 @@ export const loginHandler = async (event, context) => {
   try {
     if (!event.body) {
       return jsonResponse(400, {
-        status: 'error',
-        message: 'Request body is required'
+        status: "error",
+        message: "Request body is required",
       });
     }
 
@@ -366,34 +350,76 @@ export const loginHandler = async (event, context) => {
     // Basic validation
     if (!email || !password) {
       return jsonResponse(400, {
-        status: 'error',
-        message: 'email and password are required'
+        status: "error",
+        message: "email and password are required",
       });
     }
 
     // Replace this later with DB lookup + password hash comparison
-    if (email === 'dash@example.com' && password === 'password123') {
+    if (email === "dash@example.com" && password === "password123") {
       return jsonResponse(200, {
-        status: 'Login successful',
+        status: "Login successful",
         user: {
-          email
+          email,
         },
-        token: 'fake-jwt-token'
+        token: "fake-jwt-token",
       });
     }
 
     return jsonResponse(401, {
-      status: 'error',
-      message: 'Invalid email or password'
+      status: "error",
+      message: "Invalid email or password",
     });
-
   } catch (error) {
-    console.error('loginHandler error:', error);
+    console.error("loginHandler error:", error);
 
     return jsonResponse(500, {
-      status: 'error',
-      message: 'Login failed'
+      status: "error",
+      message: "Login failed",
     });
   }
 };
 
+// --------------------
+// API Authorizer Lambda
+// ---------------------
+export const authoriserHandler = async (event, context) => {
+  logInvocationDetails(event, context);
+  // We get the AUTH token that we'll pass in as an environment variable to the lambda
+  const secretToken = process.env.AUTH_TOKEN;
+  // Get the token from the event that has just taken place
+  const token = event.authorizationToken;
+
+  // If there is no token throw a 404 error with unauthorised
+  if (!token) {
+    throw "Unauthorized";
+  }
+  // Compare the event token to the secretToken and if they match send the allow policy, if not send a deny policy
+  if (token === secretToken) {
+    return generatePolicy("user", "Allow", event.methodArn);
+  } else {
+    return generatePolicy("user", "Deny", event.methodArn);
+  }
+};
+
+// Helper function to generate an IAM policy taken from the AWS Docs
+// It takes in the principalId - the label of who's making the request
+// effect which is either allow or deny
+// resource which is the API endpoint being accessed
+var generatePolicy = function (principalId, effect, resource) {
+  var authResponse = {};
+
+  authResponse.principalId = principalId;
+  if (effect && resource) {
+    var policyDocument = {};
+    policyDocument.Version = "2012-10-17";
+    policyDocument.Statement = [];
+    var statementOne = {};
+    statementOne.Action = "execute-api:Invoke";
+    statementOne.Effect = effect;
+    statementOne.Resource = resource;
+    policyDocument.Statement[0] = statementOne;
+    authResponse.policyDocument = policyDocument;
+  }
+  return authResponse;
+};
