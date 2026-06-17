@@ -45,7 +45,13 @@ app.post("/api/user");
 
 app.post("/api/login", loginUser());
 
-app.post("/api/bootstrap", bootstrap);
+app.delete("/api/products", (request, response) => {
+  runHandler(deleteProductHandler, request, response);
+});
+
+app.get("/api/addtocart", getCart);
+app.post("/api/addtocart", addToCart);
+app.delete("/api/addtocart", removeFromCart);
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
@@ -54,8 +60,8 @@ app.listen(PORT, () => {
 import express from "express";
 import cors from "cors";
 
-import {postUsersHandler} from "../users.js";
-import {getImageUploadUrlHandler} from "../utility-functions.js";
+import { postUsersHandler } from "../users.js";
+import { getImageUploadUrlHandler } from "../utility-functions.js";
 
 // Creating express app
 const app = express();

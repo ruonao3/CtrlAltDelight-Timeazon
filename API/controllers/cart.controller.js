@@ -29,7 +29,7 @@ export async function addToCart(req, res){
         const productId = normaliseProductId(req.body?.productId);
 
         if (!email || !productId) {
-        return res.status(500).json({
+        return res.status(400).json({
             status: "error",
             message: "email and productId are required"
         })
