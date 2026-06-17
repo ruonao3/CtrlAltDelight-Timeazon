@@ -434,9 +434,9 @@ export class CdkStack extends Stack {
     usersTable.grantReadData(loginLambda);
 
     // Cart table
-    cartTable.grantReadWriteData(postToCartLambda);
-    cartTable.grantReadWriteData(getToCartLambda);
-    cartTable.grantReadWriteData(deleteFromCartLambda);
+    cartTable.grantReadWriteData(postToCartLambda)
+    cartTable.grantReadWriteData(getToCartLambda)
+    cartTable.grantReadWriteData(deleteFromCartLambda)
 
     // S3 lambda images
     // New Lambda to create pre signed upload urls
