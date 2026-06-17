@@ -1,4 +1,4 @@
-import { runQuery } from "../db.js";
+import { runQuery } from "../db/db.js";
 
 export async function getProducts(req, res) {
   try {

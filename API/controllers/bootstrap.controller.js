@@ -1,4 +1,4 @@
-import { bootstrapDatabase } from "../../CDK/functions/db.js";
+import { bootstrapDatabase } from "../../db/db.js";
 
 export async function bootstrap(req, res) {
   try {
