@@ -435,7 +435,7 @@ export class CdkStack extends Stack {
 
     // Cart table
     cartTable.grantReadWriteData(postToCartLambda)
-    cartTable.grantReadWriteData(getToCartLambda)
+    cartTable.grantReadData(getToCartLambda)
     cartTable.grantReadWriteData(deleteFromCartLambda)
 
     // S3 lambda images
