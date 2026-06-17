@@ -75,9 +75,9 @@ app.delete("/api/products", (request, response) => {
   runHandler(deleteProductHandler, request, response);
 });
 
-app.get('api/addToCart', getCart)
-app.get('api/addToCart', addToCart)
-app.get('api/addToCart', removeFromCart)
+app.get('/api/addtocart', getCart)
+app.post('/api/addtocart', addToCart)
+app.delete('/api/addtocart', removeFromCart)
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
