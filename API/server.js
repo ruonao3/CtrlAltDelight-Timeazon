@@ -22,7 +22,7 @@ app.post("/api/users", (req, res) => {
   postUsersHandler(req, res);
 });
 
-app.post("/api/images/upload-url", (req, res) => {
+app.post("/api/image-upload-url", (req, res) => {
   getImageUploadUrlHandler(req, res);
 });
 
