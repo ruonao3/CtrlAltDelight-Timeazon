@@ -103,21 +103,12 @@ app.get("/", (request, response) => {
   response.json("Welcome to our server");
 });
 
-app.post("/api/users", (req, res) => {
-  postUsersHandler(req, res);
-});
-
-app.post("/api/image-upload-url", (req, res) => {
-  getImageUploadUrlHandler(req, res);
-});
 
 app.post("/api/users", (req, res) => {
   postUsersHandler(req, res);
 });
 
-app.post("/api/image-upload-url", (req, res) => {
-  getImageUploadUrlHandler(req, res);
-});
+app.post("/api/image-upload-url",createImageUploadUrl);
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
