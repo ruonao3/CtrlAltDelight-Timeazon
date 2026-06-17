@@ -35,17 +35,17 @@ app.post("/api/products", createProduct);
 
 app.delete("/api/products", deleteProduct);
 
-app.get("/api/addtocart", getCart());
+app.get("/api/addtocart", getCart);
 
-app.post("/api/addtocart", addToCart());
+app.post("/api/addtocart", addToCart);
 
-app.delete("/api/addtocart", removeFromCart());
+app.delete("/api/addtocart", removeFromCart);
 
 app.post("/api/bootstrap", bootstrap);
 
-app.post("/api/user");
+// app.post("/api/user");
 
-app.post("/api/login", loginUser());
+app.post("/api/login", loginUser);
 
 app.delete("/api/products", (request, response) => {
   runHandler(deleteProductHandler, request, response);
