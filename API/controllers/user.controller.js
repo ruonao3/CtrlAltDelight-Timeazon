@@ -112,3 +112,73 @@ export async function loginUser(req, res) {
     });
   }
 }
+
+export async function createUser(req, res) {
+  try {
+    if (!TABLE_NAME) {
+      return res.status(500).json({
+        status: 'error',
+        message: 'Missing DYNAMO_TABLE_NAME'
+      })
+    }
+
+    if (!REGION) {
+      return res.status(500).json({
+        status: 'error',
+        message: 'Missing DYNAMO_REGION'
+      })
+    }
+
+    const email = normaliseEmail(req.body?.email)
+    const password = req.body?.password
+
+    if (!email || !password) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Email and password are required'
+      })
+    }
+
+    const existing = await ddb.send(
+      new GetCommand({
+        TableName: TABLE_NAME,
+        Key: { email }
+      })
+    )
+
+    if (existing.Item) {
+      return res.status(409).json({
+        status: 'error',
+        message: 'User already exists'
+      })
+    }
+
+    const passwordData = hashPassword(password)
+
+    await ddb.send(
+      new PutCommand({
+        TableName: TABLE_NAME,
+        Item: {
+          email,
+          password: passwordData,
+          createdAt: new Date().toISOString()
+        },
+        ConditionExpression: 'attribute_not_exists(email)'
+      })
+    )
+
+    // Optional success response (truncated in the image)
+    return res.status(201).json({
+      status: 'success',
+      message: 'User created successfully'
+    })
+
+  } catch (error) {
+    console.error('createUser error:', error)
+    return res.status(500).json({
+      status: 'error',
+      message: 'Internal server error'
+    })
+  }
+}
+
