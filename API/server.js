@@ -7,14 +7,13 @@ import {
   createProduct,
   deleteProduct,
 } from "./controllers/products.express.js";
-import { postUsersHandler } from "../CDK/functions/users.js";
 import {
   addToCart,
   getCart,
   removeFromCart,
 } from "./controllers/cart.controller.js";
 import { loginUser } from "./controllers/user.controller.js";
-import { bootstrap } from "./controllers/bootstrap.controller.js";
+// import { bootstrap } from "./controllers/bootstrap.controller.js";
 
 // Creating express app
 const app = express();
@@ -41,9 +40,9 @@ app.post("/api/addtocart", addToCart);
 
 app.delete("/api/addtocart", removeFromCart);
 
-app.post("/api/bootstrap", bootstrap);
+// app.post("/api/bootstrap", bootstrap);
 
-// app.post("/api/user");
+// // app.post("/api/user");
 
 app.post("/api/login", loginUser);
 
