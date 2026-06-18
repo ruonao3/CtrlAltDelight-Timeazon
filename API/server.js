@@ -17,8 +17,6 @@ import { bootstrap } from "./controllers/bootstrap.controller.js";
 
 import { createImageUploadUrl } from "./controllers/uploads.express.js";
 
-//import { createImageUploadUrl } from "./utility-functions.js";
-
 // Creating express app
 const app = express();
 // Port number
@@ -44,14 +42,12 @@ app.post("/api/addtocart", addToCart);
 
 app.delete("/api/addtocart", removeFromCart);
 
-// app.post("/api/bootstrap", bootstrap);
-
-// // app.post("/api/user");
+app.post("/api/bootstrap", bootstrap);
 
 app.post("/api/login", loginUser);
 
-app.post('/api/users', createUser);
-app.post('/api/image-upload-url', createImageUploadUrl);
+app.post("/api/users", createUser);
+app.post("/api/image-upload-url", createImageUploadUrl);
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
