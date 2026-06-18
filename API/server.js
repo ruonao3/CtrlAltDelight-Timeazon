@@ -13,7 +13,7 @@ import {
   getCart,
   removeFromCart,
 } from "./controllers/cart.controller.js";
-import { loginUser } from "./controllers/user.controller.js";
+import { loginUser, createUser } from "./controllers/user.controller.js";
 import { bootstrap } from "./controllers/bootstrap.controller.js";
 
 import { createImageUploadUrl } from "./controllers/uploads.express.js";
@@ -51,7 +51,7 @@ app.post("/api/bootstrap", bootstrap);
 
 app.post("/api/login", loginUser);
 
-app.post('/api/users', postUsersHandler);
+app.post('/api/users', createUser);
 app.post('/api/image-upload-url', createImageUploadUrl);
 
 app.listen(PORT, () => {
