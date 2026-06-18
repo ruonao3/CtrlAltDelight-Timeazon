@@ -1,0 +1,1 @@
+docker run -p 3000:3000  --env-file .env  --mount type=bind,source="$HOME/.aws",target=/root/.aws,readonly  --name test -e AWS_PROFILE=student -e AWS_REGION=eu-west-2 ctrlaltdelight-timeazon-api
