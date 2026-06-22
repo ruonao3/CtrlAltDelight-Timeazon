@@ -8,7 +8,7 @@ export async function bootstrap(req, res) {
       message: "Database reset and seeded",
     });
   } catch (error) {
-    console.error("bootstrap error:", err);
+    console.error("bootstrap error:", error);
     return jsonResponse(500, {
       status: "error",
       message: "Failed to bootstrap database",
