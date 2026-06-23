@@ -578,28 +578,38 @@ export class CdkStack extends Stack {
     const loadBalancer = elbv2.ApplicationLoadBalancer.fromLookup(
       this,
       "application-load-balancer",
-      (load_balancer_arn =
-        "arn:aws:elasticloadbalancing:eu-west-2:827602716979:loadbalancer/app/ctrlaltdelight-ALB/edc93c590c72e79d"),
+      {
+        loadBalancerArn:
+          "arn:aws:elasticloadbalancing:eu-west-2:827602716979:loadbalancer/app/ctrlaltdelight-ALB/edc93c590c72e79d",
+      },
     );
 
     // ----------------------------------
     // CloudFront distributions
     // ----------------------------------
 
-    const distribution = new cloudfront.Distribution(this, 'Distribution', {
-      certificate: cert,
-      domainNames: [fullDomain],
-      enableIpv6: true,
-      defaultBehavior: {
-        origin: new origins.LoadBalancerV2Origin(loadbalancer, { protocolPolicy: cloudfront.OriginProtocolPolicy.HTTP_ONLY }),
-        viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-        cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED,
+    const loadBalancerDistribution = new cloudfront.Distribution(
+      this,
+      "load-balancer-distribution",
+      {
+        certificate: cert,
+        domainNames: [fullDomain],
+        enableIpv6: true,
+        defaultBehavior: {
+          origin: origins.LoadBalancerV2Origin(loadBalancer, {
+            protocolPolicy: cloudfront.OriginProtocolPolicy.HTTP_ONLY,
+          }),
+          viewerProtocolPolicy:
+            cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+          cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED,
 
-        // All headers in the viewer request except for the Host header
-        originRequestPolicy: cloudfront.OriginRequestPolicy.ALL_VIEWER_EXCEPT_HOST_HEADER,
-      }
-    })
-    
+          // All headers in the viewer request except for the Host header
+          originRequestPolicy:
+            cloudfront.OriginRequestPolicy.ALL_VIEWER_EXCEPT_HOST_HEADER,
+        },
+      },
+    );
+
     const clientDistribution = new cloudfront.Distribution(
       this,
       "client-distribution",
@@ -700,16 +710,6 @@ export class CdkStack extends Stack {
       distributionPaths: ["/*"],
     });
 
-    const loadBalancerDistribution = new cloudfront.Distribution(
-      this,
-      "load-balancer-distribution",
-      {
-        defaultBehavior: {
-          origin: origins.LoadBalancerV2Origin(loadBalancer),
-        },
-      },
-    );
-
     // ----------------------------------
     // Route 53
     // ----------------------------------
@@ -797,6 +797,14 @@ export class CdkStack extends Stack {
 
     new cdk.CfnOutput(this, "03_CloudFront_StaticImagesDistributionDomain", {
       value: staticImagesDistribution.distributionDomainName,
+    });
+
+    new cdk.CfnOutput(this, "03_CloudFront_LoadBalancerDistributionId", {
+      value: loadBalancerDistribution.distributionId,
+    });
+
+    new cdk.CfnOutput(this, "03_CloudFront_LoadBalancerDistributionDomain", {
+      value: loadBalancerDistribution.distributionDomainName,
     });
 
     // --------------------------------------------------
