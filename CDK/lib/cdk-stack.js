@@ -586,6 +586,20 @@ export class CdkStack extends Stack {
     // CloudFront distributions
     // ----------------------------------
 
+    const distribution = new cloudfront.Distribution(this, 'Distribution', {
+      certificate: cert,
+      domainNames: [fullDomain],
+      enableIpv6: true,
+      defaultBehavior: {
+        origin: new origins.LoadBalancerV2Origin(loadbalancer, { protocolPolicy: cloudfront.OriginProtocolPolicy.HTTP_ONLY }),
+        viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+        cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED,
+
+        // All headers in the viewer request except for the Host header
+        originRequestPolicy: cloudfront.OriginRequestPolicy.ALL_VIEWER_EXCEPT_HOST_HEADER,
+      }
+    })
+    
     const clientDistribution = new cloudfront.Distribution(
       this,
       "client-distribution",
