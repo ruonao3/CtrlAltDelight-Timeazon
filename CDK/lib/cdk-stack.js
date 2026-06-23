@@ -16,6 +16,7 @@ import * as acm from "aws-cdk-lib/aws-certificatemanager";
 import * as route53 from "aws-cdk-lib/aws-route53";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as nodejs from "aws-cdk-lib/aws-lambda-nodejs";
+import * as elbv2 from "aws-cdk-lib/aws-elasticloadbalancingv2";
 import * as apigw from "aws-cdk-lib/aws-apigateway";
 import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
 
@@ -103,7 +104,9 @@ export class CdkStack extends Stack {
         name: `${props.subDomain}-ParameterGroup`,
         engine: postgresEngine,
         description: `${props.subDomain} parameter group with SSL enforced`,
-        removalPolicy: isProd ? cdk.RemovalPolicy.DESTROY : cdk.RemovalPolicy.DESTROY,
+        removalPolicy: isProd
+          ? cdk.RemovalPolicy.DESTROY
+          : cdk.RemovalPolicy.DESTROY,
         parameters: {
           "rds.force_ssl": "1", // require SSL for database connections
         },
@@ -132,8 +135,10 @@ export class CdkStack extends Stack {
       enableDataApi: true,
 
       // Tear the database down with the stack (fine for a lab, not for prod)
-      removalPolicy: isProd ? cdk.RemovalPolicy.DESTROY : cdk.RemovalPolicy.DESTROY,
-    })
+      removalPolicy: isProd
+        ? cdk.RemovalPolicy.DESTROY
+        : cdk.RemovalPolicy.DESTROY,
+    });
 
     // ----------------------------------
     // DynamoDB tables
@@ -144,8 +149,10 @@ export class CdkStack extends Stack {
       tableName: `${props.subDomain}-users`,
       partitionKey: { name: "email", type: dynamodb.AttributeType.STRING },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
-      removalPolicy: isProd ? cdk.RemovalPolicy.DESTROY : cdk.RemovalPolicy.DESTROY,
-    })
+      removalPolicy: isProd
+        ? cdk.RemovalPolicy.DESTROY
+        : cdk.RemovalPolicy.DESTROY,
+    });
 
     // Cart table (many items per user)
     const cartTable = new dynamodb.Table(this, "cart-table", {
@@ -153,8 +160,10 @@ export class CdkStack extends Stack {
       partitionKey: { name: "email", type: dynamodb.AttributeType.STRING },
       sortKey: { name: "productId", type: dynamodb.AttributeType.STRING },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
-      removalPolicy: isProd ? cdk.RemovalPolicy.DESTROY : cdk.RemovalPolicy.DESTROY,
-    })
+      removalPolicy: isProd
+        ? cdk.RemovalPolicy.DESTROY
+        : cdk.RemovalPolicy.DESTROY,
+    });
 
     // ----------------------------------
     // S3 buckets
@@ -162,7 +171,9 @@ export class CdkStack extends Stack {
 
     const staticImagesBucket = new s3.Bucket(this, "static-images", {
       bucketName: `${props.subDomain}-static-images`,
-      removalPolicy: isProd ? cdk.RemovalPolicy.DESTROY : cdk.RemovalPolicy.DESTROY,
+      removalPolicy: isProd
+        ? cdk.RemovalPolicy.DESTROY
+        : cdk.RemovalPolicy.DESTROY,
       autoDeleteObjects: isProd ? undefined : true,
       publicReadAccess: false,
       encryption: s3.BucketEncryption.S3_MANAGED,
@@ -172,7 +183,7 @@ export class CdkStack extends Stack {
           allowedOrigins: [`https://${fullDomain}`], // only site can access images
           allowedMethods: [
             s3.HttpMethods.GET,
-            s3.HttpMethods.PUT,  //-> not safe
+            s3.HttpMethods.PUT, //-> not safe
             s3.HttpMethods.HEAD,
           ],
           allowedHeaders: ["*"],
@@ -184,7 +195,9 @@ export class CdkStack extends Stack {
 
     const clientBucket = new s3.Bucket(this, "client-bucket", {
       bucketName: `${props.subDomain}-client-bucket`,
-      removalPolicy: isProd ? cdk.RemovalPolicy.DESTROY : cdk.RemovalPolicy.DESTROY,
+      removalPolicy: isProd
+        ? cdk.RemovalPolicy.DESTROY
+        : cdk.RemovalPolicy.DESTROY,
       autoDeleteObjects: isProd ? undefined : true,
       publicReadAccess: false,
       encryption: s3.BucketEncryption.S3_MANAGED,
@@ -434,9 +447,9 @@ export class CdkStack extends Stack {
     usersTable.grantReadData(loginLambda);
 
     // Cart table
-    cartTable.grantReadWriteData(postToCartLambda)
-    cartTable.grantReadData(getToCartLambda)
-    cartTable.grantReadWriteData(deleteFromCartLambda)
+    cartTable.grantReadWriteData(postToCartLambda);
+    cartTable.grantReadData(getToCartLambda);
+    cartTable.grantReadWriteData(deleteFromCartLambda);
 
     // S3 lambda images
     // New Lambda to create pre signed upload urls
@@ -559,52 +572,70 @@ export class CdkStack extends Stack {
     );
 
     // ----------------------------------
+    // Application Load Balancer
+    // ----------------------------------
+    // Look up the existing application load balancer
+    const loadBalancer = elbv2.ApplicationLoadBalancer.fromLookup(
+      this,
+      "application-load-balancer",
+      (load_balancer_arn =
+        "arn:aws:elasticloadbalancing:eu-west-2:827602716979:loadbalancer/app/ctrlaltdelight-ALB/edc93c590c72e79d"),
+    );
+
+    // ----------------------------------
     // CloudFront distributions
     // ----------------------------------
 
-    const clientDistribution = new cloudfront.Distribution(this, 'client-distribution', {
-      defaultBehavior: {
-        origin: origins.S3BucketOrigin.withOriginAccessControl(clientBucket),
-        viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-        originRequestPolicy: clientQueryPolicy,
-        functionAssociations: [
-          {
-            eventType: cloudfront.FunctionEventType.VIEWER_REQUEST,
-            function: redirectsFunction
-          }
-        ]
-      },
-      additionalBehaviors: {
-        '/api/*': {
-          origin: new origins.HttpOrigin(
-            `${api.restApiId}.execute-api.${props.env.region}.amazonaws.com`
-          ),
-          viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-          allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
-          cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED,
-          originRequestPolicy: cloudfront.OriginRequestPolicy.ALL_VIEWER_EXCEPT_HOST_HEADER
-        }
-      },
-      errorResponses: [
-        {
-          httpStatus: 403,
-          responseHttpStatus: 200,
-          responsePagePath: '/index.html',
-          ttl: cdk.Duration.seconds(0)
+    const clientDistribution = new cloudfront.Distribution(
+      this,
+      "client-distribution",
+      {
+        defaultBehavior: {
+          origin: origins.S3BucketOrigin.withOriginAccessControl(clientBucket),
+          viewerProtocolPolicy:
+            cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+          originRequestPolicy: clientQueryPolicy,
+          functionAssociations: [
+            {
+              eventType: cloudfront.FunctionEventType.VIEWER_REQUEST,
+              function: redirectsFunction,
+            },
+          ],
         },
-        {
-          httpStatus: 404,
-          responseHttpStatus: 200,
-          responsePagePath: '/index.html',
-          ttl: cdk.Duration.seconds(0)
-        }
-      ],
-      defaultRootObject: 'index.html',
-      priceClass: cloudfront.PriceClass.PRICE_CLASS_100,
-      domainNames: [fullDomain],
-      certificate: cert,
-      webAclId: props.devWebAclArn
-    })
+        additionalBehaviors: {
+          "/api/*": {
+            origin: new origins.HttpOrigin(
+              `${api.restApiId}.execute-api.${props.env.region}.amazonaws.com`,
+            ),
+            viewerProtocolPolicy:
+              cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+            allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
+            cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED,
+            originRequestPolicy:
+              cloudfront.OriginRequestPolicy.ALL_VIEWER_EXCEPT_HOST_HEADER,
+          },
+        },
+        errorResponses: [
+          {
+            httpStatus: 403,
+            responseHttpStatus: 200,
+            responsePagePath: "/index.html",
+            ttl: cdk.Duration.seconds(0),
+          },
+          {
+            httpStatus: 404,
+            responseHttpStatus: 200,
+            responsePagePath: "/index.html",
+            ttl: cdk.Duration.seconds(0),
+          },
+        ],
+        defaultRootObject: "index.html",
+        priceClass: cloudfront.PriceClass.PRICE_CLASS_100,
+        domainNames: [fullDomain],
+        certificate: cert,
+        webAclId: props.devWebAclArn,
+      },
+    );
 
     new s3Deployment.BucketDeployment(this, "client-deployment", {
       destinationBucket: clientBucket,
@@ -619,22 +650,28 @@ export class CdkStack extends Stack {
       distributionPaths: ["/*"],
     });
 
-    const staticImagesDistribution = new cloudfront.Distribution(this,'static-images-distribution',{
-      defaultBehavior: {
-        origin: origins.S3BucketOrigin.withOriginAccessControl(staticImagesBucket),
-        viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-        functionAssociations: [
-          {
-            eventType: cloudfront.FunctionEventType.VIEWER_REQUEST,
-            function: redirectsFunction
-          }
-        ]
+    const staticImagesDistribution = new cloudfront.Distribution(
+      this,
+      "static-images-distribution",
+      {
+        defaultBehavior: {
+          origin:
+            origins.S3BucketOrigin.withOriginAccessControl(staticImagesBucket),
+          viewerProtocolPolicy:
+            cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+          functionAssociations: [
+            {
+              eventType: cloudfront.FunctionEventType.VIEWER_REQUEST,
+              function: redirectsFunction,
+            },
+          ],
+        },
+        priceClass: cloudfront.PriceClass.PRICE_CLASS_100,
+        domainNames: [staticImagesInS3Domain],
+        certificate: cert,
+        webAclId: props.devWebAclArn,
       },
-      priceClass: cloudfront.PriceClass.PRICE_CLASS_100,
-      domainNames: [staticImagesInS3Domain],
-      certificate: cert,
-      webAclId: props.devWebAclArn
-    })
+    );
 
     new s3Deployment.BucketDeployment(this, "static-images-deployment", {
       destinationBucket: staticImagesBucket,
@@ -648,6 +685,16 @@ export class CdkStack extends Stack {
       distribution: staticImagesDistribution,
       distributionPaths: ["/*"],
     });
+
+    const loadBalancerDistribution = new cloudfront.Distribution(
+      this,
+      "load-balancer-distribution",
+      {
+        defaultBehavior: {
+          origin: origins.LoadBalancerV2Origin(loadBalancer),
+        },
+      },
+    );
 
     // ----------------------------------
     // Route 53
@@ -666,6 +713,12 @@ export class CdkStack extends Stack {
       zone,
       recordName: fullDomain,
       domainName: clientDistribution.distributionDomainName,
+    });
+
+    new route53.CnameRecord(this, "loadBalancer-record", {
+      zone,
+      recordName: fullDomain,
+      domainName: loadBalancerDistribution.distributionDomainName,
     });
 
     // ----------------------------------
