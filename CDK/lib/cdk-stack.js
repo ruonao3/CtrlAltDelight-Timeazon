@@ -588,28 +588,6 @@ export class CdkStack extends Stack {
     // CloudFront distributions
     // ----------------------------------
 
-    const loadBalancerDistribution = new cloudfront.Distribution(
-      this,
-      "load-balancer-distribution",
-      {
-        certificate: cert,
-        domainNames: [fullDomain],
-        enableIpv6: true,
-        defaultBehavior: {
-          origin: origins.LoadBalancerV2Origin(loadBalancer, {
-            protocolPolicy: cloudfront.OriginProtocolPolicy.HTTP_ONLY,
-          }),
-          viewerProtocolPolicy:
-            cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-          cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED,
-
-          // All headers in the viewer request except for the Host header
-          originRequestPolicy:
-            cloudfront.OriginRequestPolicy.ALL_VIEWER_EXCEPT_HOST_HEADER,
-        },
-      },
-    );
-
     const clientDistribution = new cloudfront.Distribution(
       this,
       "client-distribution",
@@ -628,9 +606,9 @@ export class CdkStack extends Stack {
         },
         additionalBehaviors: {
           "/api/*": {
-            origin: new origins.HttpOrigin(
-              `${api.restApiId}.execute-api.${props.env.region}.amazonaws.com`,
-            ),
+            origin: new origins.LoadBalancerV2Origin(loadBalancer, {
+              protocolPolicy: cloudfront.OriginProtocolPolicy.HTTP_ONLY,
+            }),
             viewerProtocolPolicy:
               cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
             allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
@@ -727,12 +705,6 @@ export class CdkStack extends Stack {
       zone,
       recordName: fullDomain,
       domainName: clientDistribution.distributionDomainName,
-    });
-
-    new route53.CnameRecord(this, "loadBalancer-record", {
-      zone,
-      recordName: fullDomain,
-      domainName: loadBalancerDistribution.distributionDomainName,
     });
 
     // ----------------------------------
