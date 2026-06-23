@@ -771,14 +771,6 @@ export class CdkStack extends Stack {
       value: staticImagesDistribution.distributionDomainName,
     });
 
-    new cdk.CfnOutput(this, "03_CloudFront_LoadBalancerDistributionId", {
-      value: loadBalancerDistribution.distributionId,
-    });
-
-    new cdk.CfnOutput(this, "03_CloudFront_LoadBalancerDistributionDomain", {
-      value: loadBalancerDistribution.distributionDomainName,
-    });
-
     // --------------------------------------------------
     // 04 – Storage (S3 Buckets)
     // --------------------------------------------------
