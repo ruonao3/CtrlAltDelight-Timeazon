@@ -578,8 +578,10 @@ export class CdkStack extends Stack {
     const loadBalancer = elbv2.ApplicationLoadBalancer.fromLookup(
       this,
       "application-load-balancer",
-      (load_balancer_arn =
-        "arn:aws:elasticloadbalancing:eu-west-2:827602716979:loadbalancer/app/ctrlaltdelight-ALB/edc93c590c72e79d"),
+      {
+        loadBalancerArn:
+          "arn:aws:elasticloadbalancing:eu-west-2:827602716979:loadbalancer/app/ctrlaltdelight-ALB/edc93c590c72e79d",
+      },
     );
 
     // ----------------------------------
@@ -783,6 +785,14 @@ export class CdkStack extends Stack {
 
     new cdk.CfnOutput(this, "03_CloudFront_StaticImagesDistributionDomain", {
       value: staticImagesDistribution.distributionDomainName,
+    });
+
+    new cdk.CfnOutput(this, "03_CloudFront_LoadBalancerDistributionId", {
+      value: loadBalancerDistribution.distributionId,
+    });
+
+    new cdk.CfnOutput(this, "03_CloudFront_LoadBalancerDistributionDomain", {
+      value: loadBalancerDistribution.distributionDomainName,
     });
 
     // --------------------------------------------------
