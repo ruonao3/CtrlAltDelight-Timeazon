@@ -479,14 +479,14 @@ export class CdkStack extends Stack {
         stageName: "api",
       },
       defaultCorsPreflightOptions: {
-        allowHeaders: [
+        allowedHeaders: [
           "Content-Type",
           "Access-Control-Allow-Origin",
           "Access-Control-Request-Method",
           "Access-Control-Request-Headers",
         ],
-        allowMethods: ["GET", "POST", "OPTIONS", "DELETE"],
-        allowOrigins: ["https://ctrlaltdelight.cta-training.academy"],
+        allowedMethods: ["GET", "POST", "OPTIONS", "DELETE"],
+        allowedOrigins: ["https://ctrlaltdelight.cta-training.academy"],
         allowCredentials: true,
       },
     });
